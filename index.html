@@ -414,6 +414,8 @@
                                     <th class="p-4 text-center">จำนวน</th>
                                     <th class="p-4">ผู้เบิก / ผู้รับ</th>
                                     <th class="p-4">หน่วยงาน / หมายเหตุ</th>
+                                    <!-- 📌 [จุดที่เพิ่มที่ 1]: หัวตารางจัดการ (จะแสดงเฉพาะตอน Login เป็น Admin) -->
+                                    <th id="historyActionHeader" class="p-4 text-center hidden">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="historyTableBody" class="divide-y divide-slate-100">
@@ -769,12 +771,12 @@
                 avatar.className = 'w-9 h-9 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold shadow-inner';
                 avatar.innerHTML = '<i class="fa-solid fa-user"></i>';
                 
-                // If currently on admin tab, switch back to dashboard
                 const activeTab = document.querySelector('.tab-content:not(.hidden)').id;
                 if(activeTab === 'tab-admin-products' || activeTab === 'tab-admin-settings') {
                     switchTab('dashboard');
                 }
             }
+            renderHistoryTable();
         }
 
         function openLoginModal() {
@@ -1075,6 +1077,14 @@
             const deptFilter = document.getElementById('filterTxDept').value;
             const searchKeyword = document.getElementById('filterTxSearch').value.toLowerCase();
             const tbody = document.getElementById('historyTableBody');
+            const actionHeader = document.getElementById('historyActionHeader');
+
+            // แสดงหรือซ่อนคอลัมน์จัดการ (ปุ่มลบ) ตามสิทธิ์แอดมิน
+            if (isAdmin) {
+                actionHeader.classList.remove('hidden');
+            } else {
+                actionHeader.classList.add('hidden');
+            }
 
             const filtered = ppeTransactions.filter(tx => {
                 const matchType = !typeFilter || tx.type === typeFilter;
@@ -1084,7 +1094,8 @@
             });
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่พบประวัติรายการตามเงื่อนไขที่กรอง</td></tr>`;
+                const colSpan = isAdmin ? 7 : 6;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-8 text-slate-400">ไม่พบประวัติรายการตามเงื่อนไขที่กรอง</td></tr>`;
                 return;
             }
 
@@ -1096,8 +1107,21 @@
                     <td class="p-4 text-center font-bold text-base ${tx.type === 'เบิกจ่าย' ? 'text-red-600' : 'text-emerald-600'}">${tx.type === 'เบิกจ่าย' ? '-' : '+'}${tx.qty}</td>
                     <td class="p-4 text-slate-700">${tx.requester}</td>
                     <td class="p-4 text-xs text-slate-500"><span class="font-semibold text-slate-700">${tx.department}</span><p class="text-[11px] text-slate-400 mt-0.5">${tx.reason} ${tx.note && tx.note !== '-' ? '(' + tx.note + ')' : ''}</p></td>
+                    <!-- 📌 [จุดที่เพิ่มที่ 2]: ปุ่มกดลบแต่ละแถว (จะแสดงเฉพาะตอน Login เป็น Admin) -->
+                    ${isAdmin ? `<td class="p-4 text-center whitespace-nowrap"><button onclick="deleteTransaction('${tx.id}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="ลบประวัติ"><i class="fa-solid fa-trash"></i></button></td>` : ''}
                 </tr>
             `).join('');
+        }
+
+        // 📌 [จุดที่เพิ่มที่ 3]: ฟังก์ชันสั่งลบข้อมูลประวัติ (วางไว้ในส่วนล่างของ script)
+        function deleteTransaction(id) {
+            if(!isAdmin) { openLoginModal(); return; }
+            if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบประวัติรายการนี้?')) {
+                ppeTransactions = ppeTransactions.filter(tx => tx.id !== id);
+                saveData();
+                renderHistoryTable();
+                showToast('ลบสำเร็จ', 'ลบประวัติรายการเรียบร้อยแล้ว');
+            }
         }
 
         function exportHistoryCSV() {
