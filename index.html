@@ -1328,6 +1328,11 @@
             updateAdminUI();
             renderDashboard();
         };
+        // ตัวอย่างการแทรกปุ่มลบในตาราง (ให้แสดงเฉพาะตอนที่ isAdmin เป็น true)
+let deleteBtnHTML = '';
+if (isAdmin) {
+    deleteBtnHTML = `<button onclick="deleteHistoryItem('${item.id}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 ml-2">ลบ</button>`;
+}
     </script>
 </body>
 </html>
