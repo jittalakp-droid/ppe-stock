@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการสต็อกและเบิกจ่าย PPE + ระบบหลังบ้าน (Admin)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        safety: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col">
+
+    <!-- Top Header -->
+    <header class="bg-slate-900 text-white shadow-md z-20 flex items-center justify-between px-4 lg:px-8 py-3 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button id="sidebarToggle" class="text-slate-300 hover:text-white lg:hidden focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="bg-safety-500 text-slate-900 p-2 rounded-lg font-bold flex items-center justify-center shadow">
+                    <i class="fa-solid fa-hard-hat text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide">PPE Stock Pro <span class="text-xs bg-safety-500 text-slate-900 px-1.5 py-0.5 rounded font-bold ml-1">Admin Ready</span></h1>
+                    <p class="text-xs text-slate-400">ระบบจัดการคลังและเบิกจ่ายอุปกรณ์ความปลอดภัย</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Low Stock Notification Badge -->
+            <button onclick="switchTab('reports')" class="relative text-slate-300 hover:text-white focus:outline-none bg-slate-800 p-2 rounded-full border border-slate-700">
+                <i class="fa-solid fa-bell"></i>
+                <span id="notifBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+            </button>
+            
+            <!-- User / Admin Mode Badge & Switcher -->
+            <div class="flex items-center space-x-3 border-l border-slate-700 pl-4">
+                <div id="userAvatar" class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white shadow-inner">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="hidden sm:block text-left">
+                    <p id="userNameDisplay" class="text-sm font-medium leading-none">ผู้ใช้งานทั่วไป (User)</p>
+                    <p id="userRoleDisplay" class="text-xs text-slate-400 mt-1">โหมดพนักงานทั่วไป</p>
+                </div>
+                <button onclick="openLoginModal()" class="bg-slate-800 hover:bg-slate-700 text-safety-500 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center space-x-1">
+                    <i class="fa-solid fa-key"></i>
+                    <span id="loginBtnText">เข้าสู่ระบบแอดมิน</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- Sidebar Backdrop for Mobile -->
+        <div id="sidebarBackdrop" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-64 bg-slate-800 text-slate-300 flex flex-col z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-700">
+            <div class="p-4 border-b border-slate-700 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                เมนูหลัก
+            </div>
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors bg-safety-500 text-slate-900 shadow">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>ภาพรวม Dashboard</span>
+                </button>
+                <button onclick="switchTab('inventory')" data-tab="inventory" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-700 hover:text-white">
+                    <i class="fa-solid fa-boxes-stacked w-5 text-center"></i>
+                    <span>คลังสินค้า & สต็อก</span>
+                </button>
+                <button onclick="switchTab('disbursement')" data-tab="disbursement" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-700 hover:text-white">
+                    <i class="fa-solid fa-cart-arrow-down w-5 text-center"></i>
+                    <span>ทำรายการเบิกจ่ายอุปกรณ์</span>
+                </button>
+                <button onclick="switchTab('history')" data-tab="history" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-700 hover:text-white">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                    <span>ประวัติการเบิก-รับเข้า</span>
+                </button>
+                <button onclick="switchTab('reports')" data-tab="reports" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-700 hover:text-white">
+                    <i class="fa-solid fa-triangle-exclamation w-5 text-center"></i>
+                    <span>แจ้งเตือน & รายงานสรุป</span>
+                </button>
+
+                <!-- Admin Only Section -->
+                <div id="adminMenuSection" class="pt-4 mt-4 border-t border-slate-700 hidden">
+                    <p class="px-3 text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-shield-halved mr-1"></i> ระบบหลังบ้าน (Admin)
+                    </p>
+                    <button onclick="switchTab('admin-products')" data-tab="admin-products" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-700 hover:text-white">
+                        <i class="fa-solid fa-screwdriver-wrench w-5 text-center text-safety-500"></i>
+                        <span>จัดการรายการสินค้า (CRUD)</span>
+                    </button>
+                    <button onclick="switchTab('admin-settings')" data-tab="admin-settings" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-700 hover:text-white">
+                        <i class="fa-solid fa-sliders w-5 text-center text-safety-500"></i>
+                        <span>ตั้งค่าหมวดหมู่ & แผนก</span>
+                    </button>
+                </div>
+            </nav>
+            <div class="p-4 border-t border-slate-700 bg-slate-900/50">
+                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-medium text-slate-300">สถานะระบบ</p>
+                        <p id="footerStatusText" class="text-xs text-slate-400">ผู้ใช้งานทั่วไป (User)</p>
+                    </div>
+                    <button id="footerActionBtn" onclick="openLoginModal()" class="text-xs bg-safety-500 hover:bg-safety-600 text-slate-900 px-2.5 py-1 rounded font-bold transition">Login</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-4 lg:p-8 flex flex-col">
+
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content fade-in space-y-6">
+                <!-- Header Banner -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="bg-safety-500 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Safety First</span>
+                        <h2 class="text-2xl lg:text-3xl font-bold mt-2">ยินดีต้อนรับสู่ระบบบริหารจัดการ PPE</h2>
+                        <p class="text-slate-300 text-sm mt-1">ควบคุม ตรวจสอบ และเบิกจ่ายอุปกรณ์คุ้มครองความปลอดภัยส่วนบุคคลอย่างมีประสิทธิภาพ</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="switchTab('disbursement')" class="bg-safety-500 hover:bg-safety-600 text-slate-900 font-semibold px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2 text-sm">
+                            <i class="fa-solid fa-plus-circle"></i>
+                            <span>ทำรายการเบิกด่วน</span>
+                        </button>
+                        <button id="dashRestockBtn" onclick="openRestockModal()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2 text-sm border border-slate-600">
+                            <i class="fa-solid fa-boxes-packing"></i>
+                            <span>รับสินค้าเข้า</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">รายการสินค้าทั้งหมด</p>
+                            <h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                            <p class="text-xs text-slate-400 mt-1">ประเภทอุปกรณ์ในระบบ</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-sm">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">สินค้าใกล้หมด (Low Stock)</p>
+                            <h3 id="statLowStock" class="text-2xl font-bold text-red-600 mt-1">0</h3>
+                            <p class="text-xs text-red-500 mt-1">ต้องทำการเติมสต็อกด่วน</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl shadow-sm">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">ยอดเบิกจ่ายวันนี้</p>
+                            <h3 id="statTodayDisburse" class="text-2xl font-bold text-slate-800 mt-1">0 ชิ้น</h3>
+                            <p class="text-xs text-emerald-600 mt-1"><span id="statTodayCount">0</span> รายการเบิก</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-sm">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">ยอดเบิกจ่ายเดือนนี้</p>
+                            <h3 id="statMonthDisburse" class="text-2xl font-bold text-slate-800 mt-1">0 ชิ้น</h3>
+                            <p class="text-xs text-slate-400 mt-1">เดือนปัจจุบัน</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-sm">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Quick Table / Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Low stock alert list -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800 flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                                <span>รายการใกล้หมด (ต้องสั่งซื้อ)</span>
+                            </h3>
+                            <button onclick="switchTab('reports')" class="text-xs text-safety-600 hover:underline font-semibold">ดูทั้งหมด</button>
+                        </div>
+                        <div id="dashboardLowStockList" class="space-y-3 flex-1 overflow-y-auto max-h-[300px]">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 lg:col-span-2 flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800 flex items-center space-x-2">
+                                <i class="fa-solid fa-history text-slate-600"></i>
+                                <span>รายการเบิก-รับ ล่าสุด</span>
+                            </h3>
+                            <button onclick="switchTab('history')" class="text-xs text-safety-600 hover:underline font-semibold">ดูประวัติทั้งหมด</button>
+                        </div>
+                        <div class="overflow-x-auto flex-1">
+                            <table class="w-full text-left text-sm text-slate-600">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3 rounded-l-lg">วันที่/เวลา</th>
+                                        <th class="p-3">ประเภท</th>
+                                        <th class="p-3">รายการอุปกรณ์</th>
+                                        <th class="p-3">จำนวน</th>
+                                        <th class="p-3 rounded-r-lg">ผู้เบิก/ผู้รับ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardRecentTx" class="divide-y divide-slate-100">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: INVENTORY -->
+            <div id="tab-inventory" class="tab-content fade-in space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">คลังสินค้าและตรวจสอบสต็อก PPE</h2>
+                        <p class="text-xs text-slate-500 mt-1">ตรวจสอบรายการอุปกรณ์และสถานะคงเหลือปัจจุบัน</p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400 text-sm"></i>
+                            <input type="text" id="inventorySearch" oninput="renderInventoryTable()" placeholder="ค้นหาชื่ออุปกรณ์, หมวดหมู่..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                                <tr>
+                                    <th class="p-4">รูป/ไอคอน</th>
+                                    <th class="p-4">รหัส / ชื่ออุปกรณ์</th>
+                                    <th class="p-4">หมวดหมู่</th>
+                                    <th class="p-4">ขนาด</th>
+                                    <th class="p-4 text-center">คงเหลือ</th>
+                                    <th class="p-4 text-center">ขั้นต่ำ (Min)</th>
+                                    <th class="p-4 text-center">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: DISBURSEMENT -->
+            <div id="tab-disbursement" class="tab-content fade-in space-y-6 hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
+                    <div class="border-b border-slate-200 pb-4 mb-6">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                            <i class="fa-solid fa-cart-arrow-down text-safety-600"></i>
+                            <span>ฟอร์มเบิกจ่ายอุปกรณ์ PPE</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">กรอกข้อมูลพนักงานและเลือกอุปกรณ์ที่ต้องการเบิก ระบบจะตัดสต็อกอัตโนมัติทันที</p>
+                    </div>
+
+                    <form id="disbursementForm" onsubmit="handleDisbursement(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่อผู้เบิกอุปกรณ์ <span class="text-red-500">*</span></label>
+                                <input type="text" id="disburseRequester" required placeholder="ระบุชื่อ - นามสกุล ผู้เบิก" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">แผนก / สังกัด <span class="text-red-500">*</span></label>
+                                <select id="disburseDepartment" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500 bg-white">
+                                    <option value="">-- เลือกแผนก --</option>
+                                    <!-- Populated dynamically from settings -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">เลือกอุปกรณ์ PPE <span class="text-red-500">*</span></label>
+                                <select id="disburseProductId" onchange="updateMaxQuantityHint()" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500 bg-white">
+                                    <option value="">-- เลือกอุปกรณ์ --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">จำนวนที่เบิก <span class="text-red-500">*</span></label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="number" id="disburseQty" min="1" required placeholder="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500">
+                                    <span id="maxStockHint" class="text-xs text-slate-500 whitespace-nowrap">คงเหลือ: -</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">เหตุผลในการเบิก <span class="text-red-500">*</span></label>
+                            <select id="disburseReason" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500 bg-white mb-2">
+                                <option value="อุปกรณ์เดิมชำรุด/เสียหาย (Replacement)">อุปกรณ์เดิมชำรุด/เสียหาย (Replacement)</option>
+                                <option value="อุปกรณ์หมดอายุการใช้งาน (Expired)">อุปกรณ์หมดอายุการใช้งาน (Expired)</option>
+                                <option value="พนักงานใหม่ / เริ่มปฏิบัติงาน (New Employee)">พนักงานใหม่ / เริ่มปฏิบัติงาน (New Employee)</option>
+                                <option value="เบิกสำรองประจำจุดงาน (Buffer stock)">เบิกสำรองประจำจุดงาน (Buffer stock)</option>
+                            </select>
+                            <textarea id="disburseNote" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)..." class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500"></textarea>
+                        </div>
+
+                        <div class="pt-4 flex justify-end space-x-3">
+                            <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-100 transition">ยกเลิก</button>
+                            <button type="submit" class="px-6 py-2.5 bg-safety-500 hover:bg-safety-600 text-slate-900 rounded-xl text-sm font-bold shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-check"></i>
+                                <span>ยืนยันการเบิกจ่าย</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 4: HISTORY -->
+            <div id="tab-history" class="tab-content fade-in space-y-6 hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">ประวัติการเบิกจ่ายและรับเข้า (History)</h2>
+                            <p class="text-xs text-slate-500 mt-1">ตรวจสอบรายการเคลื่อนไหวสต็อกย้อนหลังทั้งหมด</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportHistoryCSV()" class="bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Export CSV</span>
+                            </button>
+                            <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
+                                <i class="fa-solid fa-print"></i>
+                                <span>พิมพ์รายงาน</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Filters -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">กรองตามประเภทรายการ</label>
+                            <select id="filterTxType" onchange="renderHistoryTable()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                                <option value="">-- ทั้งหมด (เบิก/รับเข้า) --</option>
+                                <option value="เบิกจ่าย">เบิกจ่าย (Disbursement)</option>
+                                <option value="รับเข้า">รับเข้า (Restock)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">กรองตามแผนก</label>
+                            <select id="filterTxDept" onchange="renderHistoryTable()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                                <option value="">-- ทุกแผนก --</option>
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">ค้นหาชื่อ/อุปกรณ์</label>
+                            <input type="text" id="filterTxSearch" oninput="renderHistoryTable()" placeholder="พิมพ์ค้นหา..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                                <tr>
+                                    <th class="p-4">วันที่/เวลา</th>
+                                    <th class="p-4">ประเภท</th>
+                                    <th class="p-4">อุปกรณ์</th>
+                                    <th class="p-4 text-center">จำนวน</th>
+                                    <th class="p-4">ผู้เบิก / ผู้รับ</th>
+                                    <th class="p-4">แผนก / หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: REPORTS & ALERTS -->
+            <div id="tab-reports" class="tab-content fade-in space-y-6 hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">แจ้งเตือนสินค้าใกล้หมด และรายงานสรุป</h2>
+                            <p class="text-xs text-slate-500 mt-1">วิเคราะห์สถานะคลังสินค้าและยอดเบิกประจำเดือนเพื่อการบริหารจัดการสต็อก</p>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alert Banner Box -->
+                    <div class="mb-8">
+                        <h3 class="font-bold text-slate-800 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-triangle-exclamation text-red-500"></i>
+                            <span>รายการที่ต้องสั่งซื้อเติมสต็อกด่วน (Low Stock Items)</span>
+                        </h3>
+                        <div id="reportsLowStockContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Monthly Report Summary -->
+                    <div class="border-t border-slate-200 pt-6">
+                        <h3 class="font-bold text-slate-800 mb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-bar text-safety-600"></i>
+                            <span>สรุปยอดการเบิกจ่ายแยกตามหมวดหมู่ประจำเดือนนี้</span>
+                        </h3>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div id="monthlyCategorySummary" class="space-y-3">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: ADMIN - MANAGE PRODUCTS (CRUD) -->
+            <div id="tab-admin-products" class="tab-content fade-in space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
+                            <i class="fa-solid fa-screwdriver-wrench text-safety-600"></i>
+                            <span>ระบบหลังบ้าน: จัดการรายการสินค้า PPE (Admin CRUD)</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">เพิ่ม แก้ไข หรือลบอุปกรณ์ PPE ในฐานข้อมูล</p>
+                    </div>
+                    <button onclick="openProductModal()" class="bg-safety-500 hover:bg-safety-600 text-slate-900 font-semibold px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2 text-sm">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>เพิ่มอุปกรณ์ใหม่</span>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
+                                <tr>
+                                    <th class="p-4">ไอคอน</th>
+                                    <th class="p-4">รหัส / ชื่ออุปกรณ์</th>
+                                    <th class="p-4">หมวดหมู่</th>
+                                    <th class="p-4">ขนาด</th>
+                                    <th class="p-4 text-center">คงเหลือ</th>
+                                    <th class="p-4 text-center">ขั้นต่ำ</th>
+                                    <th class="p-4 text-right">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminProductsTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: ADMIN - SETTINGS (Categories, Departments, Admin Password) -->
+            <div id="tab-admin-settings" class="tab-content fade-in space-y-6 hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h2 class="text-xl font-bold text-slate-800 mb-1 flex items-center space-x-2">
+                        <i class="fa-solid fa-sliders text-safety-600"></i>
+                        <span>ระบบหลังบ้าน: ตั้งค่าระบบและข้อมูลพื้นฐาน</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-6">จัดการหมวดหมู่อุปกรณ์ แผนกในองค์กร และรหัสผ่านแอดมิน</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Categories Manager -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center space-x-2">
+                                    <i class="fa-solid fa-tags text-blue-600"></i>
+                                    <span>จัดการหมวดหมู่อุปกรณ์ (Categories)</span>
+                                </h3>
+                                <div class="flex gap-2 mb-3">
+                                    <input type="text" id="newCategoryInput" placeholder="ชื่อหมวดหมู่ใหม่..." class="flex-1 px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                                    <button onclick="addCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow">เพิ่ม</button>
+                                </div>
+                                <div id="categoryListContainer" class="space-y-2 max-h-48 overflow-y-auto">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Departments Manager -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center space-x-2">
+                                    <i class="fa-solid fa-building-user text-emerald-600"></i>
+                                    <span>จัดการแผนก / สังกัด (Departments)</span>
+                                </h3>
+                                <div class="flex gap-2 mb-3">
+                                    <input type="text" id="newDepartmentInput" placeholder="ชื่อแผนกใหม่..." class="flex-1 px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                                    <button onclick="addDepartment()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow">เพิ่ม</button>
+                                </div>
+                                <div id="departmentListContainer" class="space-y-2 max-h-48 overflow-y-auto">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Password Change Box -->
+                    <div class="mt-6 bg-amber-50 p-5 rounded-2xl border border-amber-200">
+                        <h3 class="font-bold text-slate-800 mb-2 flex items-center space-x-2">
+                            <i class="fa-solid fa-key text-amber-600"></i>
+                            <span>เปลี่ยนรหัสผ่านผู้ดูแลระบบ (Admin Password)</span>
+                        </h3>
+                        <p class="text-xs text-slate-600 mb-4">รหัสผ่านเริ่มต้นปัจจุบันคือ: <code class="bg-white px-2 py-0.5 rounded font-mono font-bold text-amber-700 border border-amber-300">admin123</code></p>
+                        <form onsubmit="changeAdminPassword(event)" class="flex flex-col sm:flex-row gap-3">
+                            <input type="password" id="newAdminPass" required placeholder="รหัสผ่านใหม่..." class="px-4 py-2 border border-amber-300 rounded-xl text-sm bg-white flex-1">
+                            <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-xl text-sm font-bold shadow">บันทึกรหัสผ่านใหม่</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Product Modal (Add/Edit) -->
+    <div id="productModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200 mb-4">
+                <h3 id="productModalTitle" class="font-bold text-lg text-slate-800">เพิ่มอุปกรณ์ PPE ใหม่</h3>
+                <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4">
+                <input type="hidden" id="editProductId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">รหัสอุปกรณ์ <span class="text-red-500">*</span></label>
+                        <input type="text" id="prodCode" required placeholder="เช่น PPE-001" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">หมวดหมู่ <span class="text-red-500">*</span></label>
+                        <select id="prodCategory" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label>
+                    <input type="text" id="prodName" required placeholder="เช่น หมวกนิรภัยปีกรอบ (Hard Hat)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ขนาด (Size)</label>
+                        <input type="text" id="prodSize" placeholder="Free / L / XL" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">จำนวนเริ่มต้น <span class="text-red-500">*</span></label>
+                        <input type="number" id="prodStock" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">จำนวนขั้นต่ำ (Min) <span class="text-red-500">*</span></label>
+                        <input type="number" id="prodMinStock" min="1" required placeholder="5" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ไอคอน FontAwesome</label>
+                    <input type="text" id="prodIcon" placeholder="fa-solid fa-hard-hat" value="fa-solid fa-shield-halved" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeProductModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-100">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 bg-safety-500 hover:bg-safety-600 text-slate-900 rounded-xl text-sm font-bold shadow">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Restock Modal (รับสินค้าเข้า) -->
+    <div id="restockModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl fade-in">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200 mb-4">
+                <h3 class="font-bold text-lg text-slate-800">รับสินค้าเข้าคลัง (Restock)</h3>
+                <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <form id="restockForm" onsubmit="handleRestock(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">เลือกอุปกรณ์ PPE <span class="text-red-500">*</span></label>
+                    <select id="restockProductId" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white">
+                        <option value="">-- เลือกอุปกรณ์ --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">จำนวนที่รับเข้าเพิ่ม <span class="text-red-500">*</span></label>
+                    <input type="number" id="restockQty" min="1" required placeholder="0" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่อผู้รับสินค้าเข้า / ผู้จัดส่ง <span class="text-red-500">*</span></label>
+                    <input type="text" id="restockReceiver" required placeholder="ระบุชื่อผู้รับสินค้า" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">หมายเหตุ / เลขที่ใบส่งของ</label>
+                    <input type="text" id="restockNote" placeholder="เช่น PO-69001..." class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm">
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeRestockModal()" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-100">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 bg-safety-500 hover:bg-safety-600 text-slate-900 rounded-xl text-sm font-bold shadow">บันทึกรับเข้า</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal (Admin Authentication) -->
+    <div id="loginModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl fade-in text-center">
+            <div class="w-14 h-14 bg-safety-100 text-safety-700 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 shadow-inner">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 class="font-bold text-lg text-slate-800 mb-1">เข้าสู่ระบบผู้ดูแลระบบ (Admin)</h3>
+            <p class="text-xs text-slate-500 mb-5">กรุณากรอกรหัสผ่านเพื่อสิทธิ์ในการจัดการคลังสินค้า</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">รหัสผ่านแอดมิน</label>
+                    <input type="password" id="adminPasswordInput" required placeholder="รหัสผ่าน..." class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeLoginModal()" class="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-100">ยกเลิก</button>
+                    <button type="submit" class="flex-1 px-4 py-2.5 bg-safety-500 hover:bg-safety-600 text-slate-900 rounded-xl text-sm font-bold shadow">เข้าสู่ระบบ</button>
+                </div>
+            </form>
+
+            <div id="logoutSection" class="mt-4 pt-4 border-t border-slate-100 hidden">
+                <button onclick="handleLogout()" class="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-semibold transition">ออกจากระบบแอดมิน (Logout)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-xl flex items-center space-x-3 border border-slate-700">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-safety-500 text-xl"></i>
+        <div>
+            <p id="toastTitle" class="text-sm font-bold">สำเร็จ</p>
+            <p id="toastMsg" class="text-xs text-slate-300">ดำเนินการเรียบร้อยแล้ว</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA STATE & INITIALIZATION ---
+        let isAdmin = localStorage.getItem('ppe_is_admin') === 'true';
+        let adminPassword = localStorage.getItem('ppe_admin_password') || 'admin123';
+
+        let ppeCategories = JSON.parse(localStorage.getItem('ppe_categories')) || [
+            'อุปกรณ์ป้องกันศีรษะ',
+            'อุปกรณ์ป้องกันดวงตา/ใบหน้า',
+            'อุปกรณ์ป้องกันการได้ยิน',
+            'อุปกรณ์ป้องกันระบบทางเดินหายใจ',
+            'อุปกรณ์ป้องกันมือ/แขน',
+            'อุปกรณ์ป้องกันเท้า/ขา',
+            'ชุดป้องกันร่างกาย/อื่นๆ'
+        ];
+
+        let ppeDepartments = JSON.parse(localStorage.getItem('ppe_departments')) || [
+            'ฝ่ายผลิต (Production)',
+            'ฝ่ายซ่อมบำรุง (Maintenance)',
+            'คลังสินค้า (Warehouse)',
+            'ความปลอดภัย (Safety/HSE)',
+            'ผู้รับเหมา (Contractor)',
+            'อื่นๆ'
+        ];
+
+        let ppeProducts = JSON.parse(localStorage.getItem('ppe_products')) || [
+            { id: '1', code: 'PPE-001', name: 'หมวกนิรภัยปีกรอบ (Hard Hat)', category: 'อุปกรณ์ป้องกันศีรษะ', size: 'Free Size', stock: 12, minStock: 15, icon: 'fa-solid fa-hard-hat' },
+            { id: '2', code: 'PPE-002', name: 'แว่นตานิรภัยเลนส์ใส (Safety Glasses)', category: 'อุปกรณ์ป้องกันดวงตา/ใบหน้า', size: 'Standard', stock: 4, minStock: 10, icon: 'fa-solid fa-glasses' },
+            { id: '3', code: 'PPE-003', name: 'ที่ครอบหูลดเสียง (Ear Muff)', category: 'อุปกรณ์ป้องกันการได้ยิน', size: 'Free Size', stock: 25, minStock: 8, icon: 'fa-solid fa-headphones' },
+            { id: '4', code: 'PPE-004', name: 'หน้ากากกันฝุ่น N95 (Dust Mask)', category: 'อุปกรณ์ป้องกันระบบทางเดินหายใจ', size: 'Box (50ชิ้น)', stock: 8, minStock: 20, icon: 'fa-solid fa-head-side-mask' },
+            { id: '5', code: 'PPE-005', name: 'ถุงมือกันบาดระดับ 5 (Cut Resistant Gloves)', category: 'อุปกรณ์ป้องกันมือ/แขน', size: 'L / XL', stock: 3, minStock: 15, icon: 'fa-solid fa-hand' },
+            { id: '6', code: 'PPE-006', name: 'รองเท้านิรภัยหัวเหล็ก (Safety Shoes)', category: 'อุปกรณ์ป้องกันเท้า/ขา', size: 'Size 42', stock: 18, minStock: 10, icon: 'fa-solid fa-shoe-prints' },
+            { id: '7', code: 'PPE-007', name: 'ชุดหมีช่างฝ้ายแท้ (Coverall Suit)', category: 'ชุดป้องกันร่างกาย/อื่นๆ', size: 'Size L', stock: 6, minStock: 12, icon: 'fa-solid fa-user-shield' }
+        ];
+
+        let ppeTransactions = JSON.parse(localStorage.getItem('ppe_transactions')) || [
+            { id: 'T-1001', timestamp: '2026-10-04 08:30', type: 'เบิกจ่าย', productId: '2', productName: 'แว่นตานิรภัยเลนส์ใส (Safety Glasses)', qty: 3, requester: 'นายสมชาย ใจดี', department: 'ฝ่ายผลิต (Production)', reason: 'อุปกรณ์เดิมชำรุด/เสียหาย (Replacement)', note: '-' },
+            { id: 'T-1002', timestamp: '2026-10-04 09:15', type: 'เบิกจ่าย', productId: '5', productName: 'ถุงมือกันบาดระดับ 5 (Cut Resistant Gloves)', qty: 5, requester: 'นายวิชัย มั่นคง', department: 'ฝ่ายซ่อมบำรุง (Maintenance)', reason: 'พนักงานใหม่ / เริ่มปฏิบัติงาน (New Employee)', note: '-' },
+            { id: 'T-1003', timestamp: '2026-10-03 14:20', type: 'รับเข้า', productId: '3', productName: 'ที่ครอบหูลดเสียง (Ear Muff)', qty: 20, requester: 'เจ้าหน้าที่คลัง', department: 'คลังสินค้า (Warehouse)', reason: 'สั่งซื้อเติมสต็อก', note: 'PO-69002' }
+        ];
+
+        function saveData() {
+            localStorage.setItem('ppe_products', JSON.stringify(ppeProducts));
+            localStorage.setItem('ppe_transactions', JSON.stringify(ppeTransactions));
+            localStorage.setItem('ppe_categories', JSON.stringify(ppeCategories));
+            localStorage.setItem('ppe_departments', JSON.stringify(ppeDepartments));
+            localStorage.setItem('ppe_admin_password', adminPassword);
+            localStorage.setItem('ppe_is_admin', isAdmin);
+        }
+
+        // --- AUTH & UI STATE UPDATES ---
+        function updateAdminUI() {
+            const adminMenu = document.getElementById('adminMenuSection');
+            const userDisplay = document.getElementById('userNameDisplay');
+            const roleDisplay = document.getElementById('userRoleDisplay');
+            const footerStatus = document.getElementById('footerStatusText');
+            const footerBtn = document.getElementById('footerActionBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const avatar = document.getElementById('userAvatar');
+
+            if (isAdmin) {
+                adminMenu.classList.remove('hidden');
+                userDisplay.innerText = 'ผู้ดูแลระบบ (Administrator)';
+                roleDisplay.innerText = 'สิทธิ์แอดมินเต็มรูปแบบ';
+                footerStatus.innerText = 'โหมดแอดมิน (Admin)';
+                footerBtn.innerText = 'Logout';
+                footerBtn.setAttribute('onclick', 'handleLogout()');
+                loginBtnText.innerText = 'จัดการสิทธิ์แอดมิน';
+                avatar.className = 'w-9 h-9 rounded-full bg-safety-500 text-slate-900 flex items-center justify-center font-bold shadow-inner';
+                avatar.innerHTML = '<i class="fa-solid fa-shield-halved"></i>';
+            } else {
+                adminMenu.classList.add('hidden');
+                userDisplay.innerText = 'ผู้ใช้งานทั่วไป (User)';
+                roleDisplay.innerText = 'โหมดพนักงานทั่วไป';
+                footerStatus.innerText = 'ผู้ใช้งานทั่วไป (User)';
+                footerBtn.innerText = 'Login';
+                footerBtn.setAttribute('onclick', 'openLoginModal()');
+                loginBtnText.innerText = 'เข้าสู่ระบบแอดมิน';
+                avatar.className = 'w-9 h-9 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold shadow-inner';
+                avatar.innerHTML = '<i class="fa-solid fa-user"></i>';
+                
+                // If currently on admin tab, switch back to dashboard
+                const activeTab = document.querySelector('.tab-content:not(.hidden)').id;
+                if(activeTab === 'tab-admin-products' || activeTab === 'tab-admin-settings') {
+                    switchTab('dashboard');
+                }
+            }
+        }
+
+        function openLoginModal() {
+            document.getElementById('adminPasswordInput').value = '';
+            const logoutSec = document.getElementById('logoutSection');
+            if(isAdmin) {
+                logoutSec.classList.remove('hidden');
+            } else {
+                logoutSec.classList.add('hidden');
+            }
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const pass = document.getElementById('adminPasswordInput').value;
+            if(pass === adminPassword) {
+                isAdmin = true;
+                saveData();
+                updateAdminUI();
+                closeLoginModal();
+                showToast('เข้าสู่ระบบสำเร็จ', 'ยินดีต้อนรับผู้ดูแลระบบ (Administrator)');
+            } else {
+                showToast('รหัสผ่านไม่ถูกต้อง', 'กรุณาลองใหม่อีกครั้ง', true);
+            }
+        }
+
+        function handleLogout() {
+            isAdmin = false;
+            saveData();
+            updateAdminUI();
+            closeLoginModal();
+            showToast('ออกจากระบบ', 'เปลี่ยนเป็นโหมดผู้ใช้งานทั่วไปเรียบร้อย');
+        }
+
+        // --- NAVIGATION & TABS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-safety-500', 'text-slate-900', 'shadow');
+                el.classList.add('hover:bg-slate-700', 'hover:text-white', 'text-slate-300');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if(activeBtn) {
+                activeBtn.classList.remove('hover:bg-slate-700', 'hover:text-white', 'text-slate-300');
+                activeBtn.classList.add('bg-safety-500', 'text-slate-900', 'shadow');
+            }
+
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.add('hidden');
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'inventory') renderInventoryTable();
+            if(tabId === 'disbursement') { populateProductDropdowns(); populateDepartmentDropdowns(); }
+            if(tabId === 'history') { populateHistoryDeptDropdowns(); renderHistoryTable(); }
+            if(tabId === 'reports') renderReports();
+            if(tabId === 'admin-products') renderAdminProductsTable();
+            if(tabId === 'admin-settings') renderAdminSettings();
+        }
+
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.remove('hidden');
+        });
+        document.getElementById('sidebarBackdrop').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarBackdrop').classList.add('hidden');
+        });
+
+        function showToast(title, msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMsg').innerText = msg;
+            const icon = document.getElementById('toastIcon');
+            if(isError) {
+                icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-xl';
+            } else {
+                icon.className = 'fa-solid fa-circle-check text-safety-500 text-xl';
+            }
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            const totalItems = ppeProducts.length;
+            const lowStockItems = ppeProducts.filter(p => p.stock <= p.minStock);
+            
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const currentMonthStr = todayStr.slice(0, 7);
+
+            let todayQty = 0, todayCount = 0, monthQty = 0;
+            ppeTransactions.forEach(tx => {
+                if(tx.type === 'เบิกจ่าย') {
+                    if(tx.timestamp.startsWith(todayStr)) { todayQty += parseInt(tx.qty); todayCount += 1; }
+                    if(tx.timestamp.startsWith(currentMonthStr)) { monthQty += parseInt(tx.qty); }
+                }
+            });
+
+            document.getElementById('statTotalItems').innerText = totalItems;
+            document.getElementById('statLowStock').innerText = lowStockItems.length;
+            document.getElementById('statTodayDisburse').innerText = todayQty + ' ชิ้น';
+            document.getElementById('statTodayCount').innerText = todayCount;
+            document.getElementById('statMonthDisburse').innerText = monthQty + ' ชิ้น';
+
+            const badge = document.getElementById('notifBadge');
+            if(lowStockItems.length > 0) { badge.innerText = lowStockItems.length; badge.classList.remove('hidden'); }
+            else { badge.classList.add('hidden'); }
+
+            const lowStockContainer = document.getElementById('dashboardLowStockList');
+            if(lowStockItems.length === 0) {
+                lowStockContainer.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm"><i class="fa-solid fa-circle-check text-emerald-500 text-2xl mb-2"></i><p>ยอดสต็อกปกติทุกรายการ</p></div>`;
+            } else {
+                lowStockContainer.innerHTML = lowStockItems.map(item => `
+                    <div class="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-xl">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold"><i class="${item.icon}"></i></div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">${item.name}</h4>
+                                <p class="text-xs text-red-600">คงเหลือ: <b>${item.stock}</b> (ขั้นต่ำ: ${item.minStock})</p>
+                            </div>
+                        </div>
+                        ${isAdmin ? `<button onclick="openRestockModalWithProduct('${item.id}')" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg font-semibold transition">เติมสต็อก</button>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            const recentTxBody = document.getElementById('dashboardRecentTx');
+            const recent = ppeTransactions.slice(0, 5);
+            if(recent.length === 0) {
+                recentTxBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-400">ยังไม่มีประวัติรายการ</td></tr>`;
+            } else {
+                recentTxBody.innerHTML = recent.map(tx => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-xs text-slate-500">${tx.timestamp}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${tx.type === 'เบิกจ่าย' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${tx.type}</span></td>
+                        <td class="p-3 font-medium text-slate-800">${tx.productName}</td>
+                        <td class="p-3 font-bold ${tx.type === 'เบิกจ่าย' ? 'text-red-600' : 'text-emerald-600'}">${tx.type === 'เบิกจ่าย' ? '-' : '+'}${tx.qty}</td>
+                        <td class="p-3 text-slate-600">${tx.requester}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // --- INVENTORY VIEW ---
+        function renderInventoryTable() {
+            const keyword = document.getElementById('inventorySearch').value.toLowerCase();
+            const tbody = document.getElementById('inventoryTableBody');
+            const filtered = ppeProducts.filter(p => p.name.toLowerCase().includes(keyword) || p.code.toLowerCase().includes(keyword) || p.category.toLowerCase().includes(keyword));
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">ไม่พบรายการอุปกรณ์ PPE ที่ค้นหา</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const isLow = item.stock <= item.minStock;
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shadow-sm"><i class="${item.icon}"></i></div></td>
+                        <td class="p-4"><span class="font-bold text-slate-800">${item.name}</span><p class="text-xs text-slate-400 font-mono">${item.code}</p></td>
+                        <td class="p-4 text-xs text-slate-600">${item.category}</td>
+                        <td class="p-4 text-xs text-slate-600">${item.size || '-'}</td>
+                        <td class="p-4 text-center font-bold text-base ${isLow ? 'text-red-600' : 'text-slate-800'}">${item.stock}</td>
+                        <td class="p-4 text-center text-xs text-slate-500">${item.minStock}</td>
+                        <td class="p-4 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${isLow ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-emerald-100 text-emerald-700'}">${isLow ? '⚠️ ใกล้หมด' : '✓ ปกติ'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- DISBURSEMENT ---
+        function populateProductDropdowns() {
+            const select = document.getElementById('disburseProductId');
+            select.innerHTML = '<option value="">-- เลือกอุปกรณ์ --</option>' + ppeProducts.map(p => `
+                <option value="${p.id}" data-stock="${p.stock}">${p.name} (${p.category}) - คงเหลือ: ${p.stock}</option>
+            `).join('');
+            document.getElementById('maxStockHint').innerText = 'คงเหลือ: -';
+        }
+
+        function populateDepartmentDropdowns() {
+            const select = document.getElementById('disburseDepartment');
+            select.innerHTML = '<option value="">-- เลือกแผนก --</option>' + ppeDepartments.map(d => `<option value="${d}">${d}</option>`).join('');
+        }
+
+        function updateMaxQuantityHint() {
+            const select = document.getElementById('disburseProductId');
+            const selectedOption = select.options[select.selectedIndex];
+            const stock = selectedOption.getAttribute('data-stock');
+            const qtyInput = document.getElementById('disburseQty');
+            if(stock !== null) {
+                document.getElementById('maxStockHint').innerText = `คงเหลือ: ${stock} ชิ้น`;
+                qtyInput.max = stock;
+            } else {
+                document.getElementById('maxStockHint').innerText = 'คงเหลือ: -';
+                qtyInput.removeAttribute('max');
+            }
+        }
+
+        function handleDisbursement(event) {
+            event.preventDefault();
+            const productId = document.getElementById('disburseProductId').value;
+            const qty = parseInt(document.getElementById('disburseQty').value);
+            const requester = document.getElementById('disburseRequester').value.trim();
+            const department = document.getElementById('disburseDepartment').value;
+            const reason = document.getElementById('disburseReason').value;
+            const note = document.getElementById('disburseNote').value.trim() || '-';
+
+            const product = ppeProducts.find(p => p.id === productId);
+            if(!product) { showToast('เกิดข้อผิดพลาด', 'ไม่พบอุปกรณ์ที่เลือก', true); return; }
+
+            if(product.stock < qty) {
+                showToast('เบิกไม่สำเร็จ', `สินค้าในคลังไม่พอ (${product.name} เหลือเพียง ${product.stock} ชิ้น)`, true);
+                return;
+            }
+
+            product.stock -= qty;
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
+            const txId = 'TX-' + Math.floor(1000 + Math.random() * 9000);
+
+            ppeTransactions.unshift({
+                id: txId, timestamp, type: 'เบิกจ่าย', productId: product.id, productName: product.name, qty, requester, department, reason, note
+            });
+
+            saveData();
+            showToast('เบิกจ่ายสำเร็จ', `ตัดสต็อก ${product.name} จำนวน ${qty} ชิ้นเรียบร้อย`);
+            document.getElementById('disbursementForm').reset();
+            document.getElementById('maxStockHint').innerText = 'คงเหลือ: -';
+            populateProductDropdowns();
+        }
+
+        // --- RESTOCK ---
+        function openRestockModal() {
+            if(!isAdmin) {
+                openLoginModal();
+                showToast('ต้องใช้สิทธิ์แอดมิน', 'กรุณาเข้าสู่ระบบแอดมินเพื่อรับสินค้าเข้าคลัง', true);
+                return;
+            }
+            const select = document.getElementById('restockProductId');
+            select.innerHTML = '<option value="">-- เลือกอุปกรณ์ --</option>' + ppeProducts.map(p => `
+                <option value="${p.id}">${p.name} (คลังปัจจุบัน: ${p.stock})</option>
+            `).join('');
+            document.getElementById('restockForm').reset();
+            document.getElementById('restockModal').classList.remove('hidden');
+        }
+
+        function openRestockModalWithProduct(productId) {
+            openRestockModal();
+            document.getElementById('restockProductId').value = productId;
+        }
+
+        function closeRestockModal() {
+            document.getElementById('restockModal').classList.add('hidden');
+        }
+
+        function handleRestock(event) {
+            event.preventDefault();
+            const productId = document.getElementById('restockProductId').value;
+            const qty = parseInt(document.getElementById('restockQty').value);
+            const receiver = document.getElementById('restockReceiver').value.trim();
+            const note = document.getElementById('restockNote').value.trim() || 'รับสินค้าเข้าคลัง';
+
+            const product = ppeProducts.find(p => p.id === productId);
+            if(!product) return;
+
+            product.stock += qty;
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
+            const txId = 'RX-' + Math.floor(1000 + Math.random() * 9000);
+
+            ppeTransactions.unshift({
+                id: txId, timestamp, type: 'รับเข้า', productId: product.id, productName: product.name, qty, requester: receiver, department: 'คลังสินค้า (Warehouse)', reason: 'เติมสต็อก (Restock)', note
+            });
+
+            saveData();
+            closeRestockModal();
+            showToast('รับสินค้าสำเร็จ', `เพิ่มสต็อก ${product.name} จำนวน +${qty} ชิ้นเรียบร้อย`);
+            renderDashboard();
+        }
+
+        // --- HISTORY & REPORTS ---
+        function populateHistoryDeptDropdowns() {
+            const select = document.getElementById('filterTxDept');
+            select.innerHTML = '<option value="">-- ทุกแผนก --</option>' + ppeDepartments.map(d => `<option value="${d}">${d}</option>`).join('');
+        }
+
+        function renderHistoryTable() {
+            const typeFilter = document.getElementById('filterTxType').value;
+            const deptFilter = document.getElementById('filterTxDept').value;
+            const searchKeyword = document.getElementById('filterTxSearch').value.toLowerCase();
+            const tbody = document.getElementById('historyTableBody');
+
+            const filtered = ppeTransactions.filter(tx => {
+                const matchType = !typeFilter || tx.type === typeFilter;
+                const matchDept = !deptFilter || tx.department === deptFilter;
+                const matchSearch = !searchKeyword || tx.productName.toLowerCase().includes(searchKeyword) || tx.requester.toLowerCase().includes(searchKeyword) || tx.id.toLowerCase().includes(searchKeyword);
+                return matchType && matchDept && matchSearch;
+            });
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">ไม่พบประวัติรายการตามเงื่อนไขที่กรอง</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(tx => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4 text-xs text-slate-500 whitespace-nowrap">${tx.timestamp}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${tx.type === 'เบิกจ่าย' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${tx.type}</span></td>
+                    <td class="p-4 font-medium text-slate-800">${tx.productName}</td>
+                    <td class="p-4 text-center font-bold text-base ${tx.type === 'เบิกจ่าย' ? 'text-red-600' : 'text-emerald-600'}">${tx.type === 'เบิกจ่าย' ? '-' : '+'}${tx.qty}</td>
+                    <td class="p-4 text-slate-700">${tx.requester}</td>
+                    <td class="p-4 text-xs text-slate-500"><span class="font-semibold text-slate-700">${tx.department}</span><p class="text-[11px] text-slate-400 mt-0.5">${tx.reason} ${tx.note && tx.note !== '-' ? '(' + tx.note + ')' : ''}</p></td>
+                </tr>
+            `).join('');
+        }
+
+        function exportHistoryCSV() {
+            let csv = '\uFEFFID,Timestamp,Type,ProductName,Quantity,Requester,Department,Reason,Note\n';
+            ppeTransactions.forEach(tx => {
+                csv += `"${tx.id}","${tx.timestamp}","${tx.type}","${tx.productName}",${tx.qty},"${tx.requester}","${tx.department}","${tx.reason}","${tx.note}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PPE_Transaction_History_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            showToast('Export สำเร็จ', 'ดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว');
+        }
+
+        function renderReports() {
+            const lowStockItems = ppeProducts.filter(p => p.stock <= p.minStock);
+            const container = document.getElementById('reportsLowStockContainer');
+
+            if(lowStockItems.length === 0) {
+                container.innerHTML = `<div class="col-span-full bg-emerald-50 border border-emerald-200 text-emerald-700 p-6 rounded-2xl text-center"><i class="fa-solid fa-circle-check text-3xl mb-2"></i><p class="font-bold">สถานะคลังสินค้าปลอดภัยดีเยี่ยม</p><p class="text-xs mt-1">ไม่มีอุปกรณ์ใดต่ำกว่าเกณฑ์ขั้นต่ำในขณะนี้</p></div>`;
+            } else {
+                container.innerHTML = lowStockItems.map(item => `
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="bg-red-200 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Low Stock</span>
+                                <span class="text-xs font-mono text-slate-500">${item.code}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-base">${item.name}</h4>
+                            <p class="text-xs text-slate-500 mt-1">หมวด: ${item.category}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-red-200 flex items-center justify-between">
+                            <div><p class="text-xs text-red-600 font-semibold">คงเหลือ: ${item.stock} ชิ้น</p><p class="text-[11px] text-slate-500">เกณฑ์ขั้นต่ำ: ${item.minStock}</p></div>
+                            ${isAdmin ? `<button onclick="openRestockModalWithProduct('${item.id}')" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow transition">เติมสต็อกทันที</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const currentMonthStr = new Date().toISOString().slice(0, 7);
+            const categoryMap = {};
+            ppeCategories.forEach(c => { categoryMap[c] = 0; });
+            ppeTransactions.forEach(tx => {
+                if(tx.type === 'เบิกจ่าย' && tx.timestamp.startsWith(currentMonthStr)) {
+                    const prod = ppeProducts.find(p => p.id === tx.productId);
+                    if(prod) { categoryMap[prod.category] = (categoryMap[prod.category] || 0) + parseInt(tx.qty); }
+                }
+            });
+
+            const summaryContainer = document.getElementById('monthlyCategorySummary');
+            summaryContainer.innerHTML = Object.keys(categoryMap).map(cat => `
+                <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200">
+                    <span class="text-sm font-medium text-slate-700">${cat}</span>
+                    <span class="text-sm font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-lg">${categoryMap[cat]} ชิ้น</span>
+                </div>
+            `).join('');
+        }
+
+        // --- ADMIN: MANAGE PRODUCTS (CRUD) ---
+        function renderAdminProductsTable() {
+            const tbody = document.getElementById('adminProductsTableBody');
+            if(ppeProducts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">ยังไม่มีรายการอุปกรณ์ในระบบ</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = ppeProducts.map(item => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-4"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shadow-sm"><i class="${item.icon}"></i></div></td>
+                    <td class="p-4"><span class="font-bold text-slate-800">${item.name}</span><p class="text-xs text-slate-400 font-mono">${item.code}</p></td>
+                    <td class="p-4 text-xs text-slate-600">${item.category}</td>
+                    <td class="p-4 text-xs text-slate-600">${item.size || '-'}</td>
+                    <td class="p-4 text-center font-bold text-base text-slate-800">${item.stock}</td>
+                    <td class="p-4 text-center text-xs text-slate-500">${item.minStock}</td>
+                    <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                        <button onclick="editProduct('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-lg transition" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteProduct('${item.id}')" class="text-red-600 hover:text-red-800 bg-red-50 p-2 rounded-lg transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openProductModal(productId = null) {
+            if(!isAdmin) { openLoginModal(); return; }
+            document.getElementById('productForm').reset();
+            document.getElementById('editProductId').value = '';
+
+            const catSelect = document.getElementById('prodCategory');
+            catSelect.innerHTML = ppeCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            if(productId) {
+                document.getElementById('productModalTitle').innerText = 'แก้ไขข้อมูลอุปกรณ์ PPE';
+                const p = ppeProducts.find(item => item.id === productId);
+                if(p) {
+                    document.getElementById('editProductId').value = p.id;
+                    document.getElementById('prodCode').value = p.code;
+                    document.getElementById('prodCategory').value = p.category;
+                    document.getElementById('prodName').value = p.name;
+                    document.getElementById('prodSize').value = p.size;
+                    document.getElementById('prodStock').value = p.stock;
+                    document.getElementById('prodMinStock').value = p.minStock;
+                    document.getElementById('prodIcon').value = p.icon;
+                }
+            } else {
+                document.getElementById('productModalTitle').innerText = 'เพิ่มอุปกรณ์ PPE ใหม่';
+            }
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        function saveProduct(event) {
+            event.preventDefault();
+            const id = document.getElementById('editProductId').value;
+            const code = document.getElementById('prodCode').value.trim();
+            const category = document.getElementById('prodCategory').value;
+            const name = document.getElementById('prodName').value.trim();
+            const size = document.getElementById('prodSize').value.trim();
+            const stock = parseInt(document.getElementById('prodStock').value);
+            const minStock = parseInt(document.getElementById('prodMinStock').value);
+            const icon = document.getElementById('prodIcon').value.trim() || 'fa-solid fa-shield-halved';
+
+            if(id) {
+                const idx = ppeProducts.findIndex(p => p.id === id);
+                if(idx !== -1) {
+                    ppeProducts[idx] = { id, code, category, name, size, stock, minStock, icon };
+                    showToast('บันทึกสำเร็จ', 'อัปเดตข้อมูลอุปกรณ์เรียบร้อยแล้ว');
+                }
+            } else {
+                const newId = Date.now().toString();
+                ppeProducts.push({ id: newId, code, category, name, size, stock, minStock, icon });
+                showToast('เพิ่มสำเร็จ', 'เพิ่มอุปกรณ์ PPE เข้าสู่คลังเรียบร้อยแล้ว');
+            }
+
+            saveData();
+            closeProductModal();
+            renderAdminProductsTable();
+        }
+
+        function editProduct(id) {
+            openProductModal(id);
+        }
+
+        function deleteProduct(id) {
+            if(!isAdmin) { openLoginModal(); return; }
+            if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบอุปกรณ์นี้ออกจากระบบ?')) {
+                ppeProducts = ppeProducts.filter(p => p.id !== id);
+                saveData();
+                renderAdminProductsTable();
+                showToast('ลบสำเร็จ', 'ลบรายการอุปกรณ์เรียบร้อยแล้ว');
+            }
+        }
+
+        // --- ADMIN: SETTINGS (Categories, Departments, Password) ---
+        function renderAdminSettings() {
+            const catContainer = document.getElementById('categoryListContainer');
+            catContainer.innerHTML = ppeCategories.map((cat, idx) => `
+                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                    <span>${cat}</span>
+                    <button onclick="deleteCategory(${idx})" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded bg-red-50"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+
+            const deptContainer = document.getElementById('departmentListContainer');
+            deptContainer.innerHTML = ppeDepartments.map((dept, idx) => `
+                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                    <span>${dept}</span>
+                    <button onclick="deleteDepartment(${idx})" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded bg-red-50"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function addCategory() {
+            const input = document.getElementById('newCategoryInput');
+            const val = input.value.trim();
+            if(!val) return;
+            if(ppeCategories.includes(val)) { showToast('แจ้งเตือน', 'มีหมวดหมู่นี้อยู่แล้ว', true); return; }
+            ppeCategories.push(val);
+            saveData();
+            input.value = '';
+            renderAdminSettings();
+            showToast('เพิ่มสำเร็จ', 'เพิ่มหมวดหมู่อุปกรณ์เรียบร้อยแล้ว');
+        }
+
+        function deleteCategory(idx) {
+            if(ppeCategories.length <= 1) { showToast('ไม่สามารถลบได้', 'ต้องมีหมวดรู้อย่างน้อย 1 หมวดหมู่', true); return; }
+            ppeCategories.splice(idx, 1);
+            saveData();
+            renderAdminSettings();
+            showToast('ลบสำเร็จ', 'ลบหมวดหมู่เรียบร้อยแล้ว');
+        }
+
+        function addDepartment() {
+            const input = document.getElementById('newDepartmentInput');
+            const val = input.value.trim();
+            if(!val) return;
+            if(ppeDepartments.includes(val)) { showToast('แจ้งเตือน', 'มีแผนกนี้อยู่แล้ว', true); return; }
+            ppeDepartments.push(val);
+            saveData();
+            input.value = '';
+            renderAdminSettings();
+            showToast('เพิ่มสำเร็จ', 'เพิ่มแผนกเรียบร้อยแล้ว');
+        }
+
+        function deleteDepartment(idx) {
+            if(ppeDepartments.length <= 1) { showToast('ไม่สามารถลบได้', 'ต้องมีแผนกอย่างน้อย 1 แผนก', true); return; }
+            ppeDepartments.splice(idx, 1);
+            saveData();
+            renderAdminSettings();
+            showToast('ลบสำเร็จ', 'ลบแผนกเรียบร้อยแล้ว');
+        }
+
+        function changeAdminPassword(event) {
+            event.preventDefault();
+            const newPass = document.getElementById('newAdminPass').value.trim();
+            if(!newPass) return;
+            adminPassword = newPass;
+            saveData();
+            document.getElementById('newAdminPass').value = '';
+            showToast('เปลี่ยนรหัสผ่านสำเร็จ', 'อัปเดตรหัสผ่านผู้ดูแลระบบเรียบร้อยแล้ว');
+        }
+
+        // --- INITIAL LOAD ---
+        window.onload = function() {
+            updateAdminUI();
+            renderDashboard();
+        };
+    </script>
+</body>
+</html>
