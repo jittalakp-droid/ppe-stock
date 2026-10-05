@@ -59,7 +59,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-lg leading-tight tracking-wide">PPE Stock <span class="text-xs bg-safety-500 text-slate-900 px-1.5 py-0.5 rounded font-bold ml-1">Admin Ready</span></h1>
-                    <p class="text-xs text-slate-400">ระบบจัดการคลังและเบิกจ่ายอุปกรณ์ความปลอดภัยของโรงงานผลิตน้ำมหาสวัสดิ์</p>
+                    <p class="text-xs text-slate-400">ระบบจัดการคลังและเบิกจ่ายอุปกรณ์ป้องกันอันตรายส่วนบุคคล(PPE)ของโรงงานผลิตน้ำมหาสวัสดิ์</p>
                 </div>
             </div>
         </div>
@@ -155,7 +155,7 @@
                 <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <span class="bg-safety-500 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Safety First</span>
-                        <h2 class="text-2xl lg:text-3xl font-bold mt-2">ยินดีต้อนรับสู่ระบบบริหารจัดการ PPE</h2>
+                        <h2 class="text-2xl lg:text-3xl font-bold mt-2">ยินดีต้อนรับสู่ระบบบริหารจัดการอุปกรณ์ป้องกันอันตรายส่วนบุคคล(PPE)ของโรงงานผลิตน้ำมหาสวัสดิ์</h2>
                         <p class="text-slate-300 text-sm mt-1">ควบคุม ตรวจสอบ และเบิกจ่ายอุปกรณ์คุ้มครองความปลอดภัยส่วนบุคคลอย่างมีประสิทธิภาพ</p>
                     </div>
                     <div class="flex items-center gap-3">
@@ -174,9 +174,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">รายการสินค้าทั้งหมด</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">รายการอุปกรณ์PPEทั้งหมด</p>
                             <h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
-                            <p class="text-xs text-slate-400 mt-1">ประเภทอุปกรณ์ในระบบ</p>
+                            <p class="text-xs text-slate-400 mt-1">ประเภทอุปกรณ์PPEในระบบ</p>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shadow-sm">
                             <i class="fa-solid fa-boxes-stacked"></i>
@@ -184,7 +184,7 @@
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">สินค้าใกล้หมด (Low Stock)</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">อุปกรณ์PPEใกล้หมด (Low Stock)</p>
                             <h3 id="statLowStock" class="text-2xl font-bold text-red-600 mt-1">0</h3>
                             <p class="text-xs text-red-500 mt-1">ต้องทำการเติมสต็อกด่วน</p>
                         </div>
@@ -245,7 +245,7 @@
                                     <tr>
                                         <th class="p-3 rounded-l-lg">วันที่/เวลา</th>
                                         <th class="p-3">ประเภท</th>
-                                        <th class="p-3">รายการอุปกรณ์</th>
+                                        <th class="p-3">รายการอุปกรณ์PPE</th>
                                         <th class="p-3">จำนวน</th>
                                         <th class="p-3 rounded-r-lg">ผู้เบิก/ผู้รับ</th>
                                     </tr>
@@ -263,8 +263,8 @@
             <div id="tab-inventory" class="tab-content fade-in space-y-6 hidden">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">คลังสินค้าและตรวจสอบสต็อก PPE</h2>
-                        <p class="text-xs text-slate-500 mt-1">ตรวจสอบรายการอุปกรณ์และสถานะคงเหลือปัจจุบัน</p>
+                        <h2 class="text-xl font-bold text-slate-800">คลังอุปกรณ์PPEและตรวจสอบสต็อก PPE</h2>
+                        <p class="text-xs text-slate-500 mt-1">ตรวจสอบรายการอุปกรณ์PPEและสถานะคงเหลือปัจจุบัน</p>
                     </div>
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-64">
@@ -280,7 +280,7 @@
                             <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
                                 <tr>
                                     <th class="p-4">รูป/ไอคอน</th>
-                                    <th class="p-4">รหัส / ชื่ออุปกรณ์</th>
+                                    <th class="p-4">รหัส / ชื่ออุปกรณ์PPE</th>
                                     <th class="p-4">หมวดหมู่</th>
                                     <th class="p-4">ขนาด</th>
                                     <th class="p-4 text-center">คงเหลือ</th>
@@ -304,19 +304,19 @@
                             <i class="fa-solid fa-cart-arrow-down text-safety-600"></i>
                             <span>ฟอร์มเบิกจ่ายอุปกรณ์ PPE</span>
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">กรอกข้อมูลพนักงานและเลือกอุปกรณ์ที่ต้องการเบิก ระบบจะตัดสต็อกอัตโนมัติทันที</p>
+                        <p class="text-xs text-slate-500 mt-1">กรอกข้อมูลพนักงานและเลือกอุปกรณ์PPEที่ต้องการเบิก ระบบจะตัดสต็อกอัตโนมัติทันที</p>
                     </div>
 
                     <form id="disbursementForm" onsubmit="handleDisbursement(event)" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่อผู้เบิกอุปกรณ์ <span class="text-red-500">*</span></label>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่อผู้เบิกอุปกรณ์PPE <span class="text-red-500">*</span></label>
                                 <input type="text" id="disburseRequester" required placeholder="ระบุชื่อ - นามสกุล ผู้เบิก" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">แผนก / สังกัด <span class="text-red-500">*</span></label>
+                                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">หน่วยงาน / สังกัด <span class="text-red-500">*</span></label>
                                 <select id="disburseDepartment" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500 bg-white">
-                                    <option value="">-- เลือกแผนก --</option>
+                                    <option value="">-- เลือกหน่วยงาน --</option>
                                     <!-- Populated dynamically from settings -->
                                 </select>
                             </div>
@@ -326,7 +326,7 @@
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">เลือกอุปกรณ์ PPE <span class="text-red-500">*</span></label>
                                 <select id="disburseProductId" onchange="updateMaxQuantityHint()" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500 bg-white">
-                                    <option value="">-- เลือกอุปกรณ์ --</option>
+                                    <option value="">-- เลือกอุปกรณ์ PPE --</option>
                                 </select>
                             </div>
                             <div>
@@ -344,7 +344,7 @@
                                 <option value="อุปกรณ์เดิมชำรุด/เสียหาย (Replacement)">อุปกรณ์เดิมชำรุด/เสียหาย (Replacement)</option>
                                 <option value="อุปกรณ์หมดอายุการใช้งาน (Expired)">อุปกรณ์หมดอายุการใช้งาน (Expired)</option>
                                 <option value="พนักงานใหม่ / เริ่มปฏิบัติงาน (New Employee)">พนักงานใหม่ / เริ่มปฏิบัติงาน (New Employee)</option>
-                                <option value="เบิกสำรองประจำจุดงาน (Buffer stock)">เบิกสำรองประจำจุดงาน (Buffer stock)</option>
+                                <option value="เบิกสำรองประจำจุดงาน (Buffer stock)">เบิกสำรองประจำพื้นที่ทำงาน (Buffer stock)</option>
                             </select>
                             <textarea id="disburseNote" rows="2" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)..." class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safety-500"></textarea>
                         </div>
@@ -390,14 +390,14 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">กรองตามแผนก</label>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">กรองตามหน่วยงาน</label>
                             <select id="filterTxDept" onchange="renderHistoryTable()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
-                                <option value="">-- ทุกแผนก --</option>
+                                <option value="">-- ทุกหน่วยงาน --</option>
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">ค้นหาชื่อ/อุปกรณ์</label>
+                            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">ค้นหาชื่อ/อุปกรณ์PPE</label>
                             <input type="text" id="filterTxSearch" oninput="renderHistoryTable()" placeholder="พิมพ์ค้นหา..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
                         </div>
                     </div>
@@ -410,10 +410,10 @@
                                 <tr>
                                     <th class="p-4">วันที่/เวลา</th>
                                     <th class="p-4">ประเภท</th>
-                                    <th class="p-4">อุปกรณ์</th>
+                                    <th class="p-4">อุปกรณ์PPE</th>
                                     <th class="p-4 text-center">จำนวน</th>
                                     <th class="p-4">ผู้เบิก / ผู้รับ</th>
-                                    <th class="p-4">แผนก / หมายเหตุ</th>
+                                    <th class="p-4">หน่วยงาน / หมายเหตุ</th>
                                 </tr>
                             </thead>
                             <tbody id="historyTableBody" class="divide-y divide-slate-100">
@@ -429,8 +429,8 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
                         <div>
-                            <h2 class="text-xl font-bold text-slate-800">แจ้งเตือนสินค้าใกล้หมด และรายงานสรุป</h2>
-                            <p class="text-xs text-slate-500 mt-1">วิเคราะห์สถานะคลังสินค้าและยอดเบิกประจำเดือนเพื่อการบริหารจัดการสต็อก</p>
+                            <h2 class="text-xl font-bold text-slate-800">แจ้งเตือนอุปกรณ์PPEใกล้หมด และรายงานสรุป</h2>
+                            <p class="text-xs text-slate-500 mt-1">วิเคราะห์สถานะคลังอุปกรณ์PPEและยอดเบิกประจำเดือนเพื่อการบริหารจัดการสต็อก</p>
                         </div>
                     </div>
 
@@ -466,7 +466,7 @@
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 flex items-center space-x-2">
                             <i class="fa-solid fa-screwdriver-wrench text-safety-600"></i>
-                            <span>ระบบหลังบ้าน: จัดการรายการสินค้า PPE (Admin CRUD)</span>
+                            <span>ระบบหลังบ้าน: จัดการรายการอุปกรณ์ PPE (Admin CRUD)</span>
                         </h2>
                         <p class="text-xs text-slate-500 mt-1">เพิ่ม แก้ไข หรือลบอุปกรณ์ PPE ในฐานข้อมูล</p>
                     </div>
@@ -482,7 +482,7 @@
                             <thead class="bg-slate-100 text-slate-700 uppercase text-xs">
                                 <tr>
                                     <th class="p-4">ไอคอน</th>
-                                    <th class="p-4">รหัส / ชื่ออุปกรณ์</th>
+                                    <th class="p-4">รหัส / ชื่ออุปกรณ์ PPE</th>
                                     <th class="p-4">หมวดหมู่</th>
                                     <th class="p-4">ขนาด</th>
                                     <th class="p-4 text-center">คงเหลือ</th>
@@ -505,7 +505,7 @@
                         <i class="fa-solid fa-sliders text-safety-600"></i>
                         <span>ระบบหลังบ้าน: ตั้งค่าระบบและข้อมูลพื้นฐาน</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mb-6">จัดการหมวดหมู่อุปกรณ์ แผนกในองค์กร และรหัสผ่านแอดมิน</p>
+                    <p class="text-xs text-slate-500 mb-6">จัดการหมวดหมู่อุปกรณ์ หน่วยงานในโรงงาน และรหัสผ่านแอดมิน</p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Categories Manager -->
@@ -530,7 +530,7 @@
                             <div>
                                 <h3 class="font-bold text-slate-800 mb-3 flex items-center space-x-2">
                                     <i class="fa-solid fa-building-user text-emerald-600"></i>
-                                    <span>จัดการแผนก / สังกัด (Departments)</span>
+                                    <span>จัดการหน่วยงาน / สังกัด (Departments)</span>
                                 </h3>
                                 <div class="flex gap-2 mb-3">
                                     <input type="text" id="newDepartmentInput" placeholder="ชื่อแผนกใหม่..." class="flex-1 px-3 py-2 border border-slate-300 rounded-xl text-sm">
@@ -574,7 +574,7 @@
                 <input type="hidden" id="editProductId">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">รหัสอุปกรณ์ <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">รหัสอุปกรณ์ ppe <span class="text-red-500">*</span></label>
                         <input type="text" id="prodCode" required placeholder="เช่น PPE-001" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
                     </div>
                     <div>
@@ -586,7 +586,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่ออุปกรณ์ <span class="text-red-500">*</span></label>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">ชื่ออุปกรณ์ ppe <span class="text-red-500">*</span></label>
                     <input type="text" id="prodName" required placeholder="เช่น หมวกนิรภัยปีกรอบ (Hard Hat)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
                 </div>
 
