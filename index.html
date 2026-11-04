@@ -58,7 +58,7 @@
                     <i class="fa-solid fa-hard-hat text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-sm sm:text-lg leading-tight tracking-wide">PPE Stock <span class="text-[10px] sm:text-xs bg-safety-500 text-slate-900 px-1.5 py-0.5 rounded font-bold ml-1">Admin Ready</span></h1>
+                    <h1 class="font-bold text-sm sm:text-lg leading-tight tracking-wide">PPE Stock <span class="text-[10px] sm:text-xs bg-safety-500 text-slate-900 px-1.5 py-0.5 rounded font-bold ml-1">Cloud Sync</span></h1>
                     <p class="hidden sm:block text-xs text-slate-400">ระบบจัดการเบิกจ่ายอุปกรณ์ป้องกันอันตรายส่วนบุคคล(PPE)ของโรงงานผลิตน้ำมหาสวัสดิ์</p>
                 </div>
             </div>
@@ -147,7 +147,13 @@
         </aside>
 
         <!-- Content Area -->
-        <main class="flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-4 lg:p-8 flex flex-col">
+        <main class="flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-4 lg:p-8 flex flex-col relative">
+
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-40 flex flex-col items-center justify-center transition-opacity">
+                <div class="w-10 h-10 border-4 border-safety-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <p class="text-sm font-semibold text-slate-700">กำลังซิงค์ข้อมูลจาก Google Sheets...</p>
+            </div>
 
             <!-- TAB 1: DASHBOARD -->
             <div id="tab-dashboard" class="tab-content fade-in space-y-6">
@@ -691,7 +697,10 @@
     </div>
 
     <script>
-        // --- DATA STATE & INITIALIZATION ---
+        // --- CONFIG: GOOGLE SHEET WEB APP URL ---
+        const SCRIPT_URL = "วาง Web App URL ของคุณที่นี่"; // <--- นำ URL ที่คัดลอกมาจาก Google Sheets มาวางแทนที่ข้อความนี้
+
+        // --- DATA STATE ---
         let isAdmin = localStorage.getItem('ppe_is_admin') === 'true';
         let adminPassword = localStorage.getItem('ppe_admin_password') || 'admin123';
 
@@ -714,29 +723,69 @@
             'อื่นๆ'
         ];
 
-        let ppeProducts = JSON.parse(localStorage.getItem('ppe_products')) || [
-            { id: '1', code: 'PPE-001', name: 'หมวกนิรภัยปีกรอบ (Hard Hat)', category: 'อุปกรณ์ป้องกันศีรษะ', size: 'Free Size', stock: 12, minStock: 15, icon: 'fa-solid fa-hard-hat' },
-            { id: '2', code: 'PPE-002', name: 'แว่นตานิรภัยเลนส์ใส (Safety Glasses)', category: 'อุปกรณ์ป้องกันดวงตา/ใบหน้า', size: 'Standard', stock: 4, minStock: 10, icon: 'fa-solid fa-glasses' },
-            { id: '3', code: 'PPE-003', name: 'ที่ครอบหูลดเสียง (Ear Muff)', category: 'อุปกรณ์ป้องกันการได้ยิน', size: 'Free Size', stock: 25, minStock: 8, icon: 'fa-solid fa-headphones' },
-            { id: '4', code: 'PPE-004', name: 'หน้ากากกันฝุ่น N95 (Dust Mask)', category: 'อุปกรณ์ป้องกันระบบทางเดินหายใจ', size: 'Box (50ชิ้น)', stock: 8, minStock: 20, icon: 'fa-solid fa-head-side-mask' },
-            { id: '5', code: 'PPE-005', name: 'ถุงมือกันบาดระดับ 5 (Cut Resistant Gloves)', category: 'อุปกรณ์ป้องกันมือ/แขน', size: 'L / XL', stock: 3, minStock: 15, icon: 'fa-solid fa-hand' },
-            { id: '6', code: 'PPE-006', name: 'รองเท้านิรภัยหัวเหล็ก (Safety Shoes)', category: 'อุปกรณ์ป้องกันเท้า/ขา', size: 'Size 42', stock: 18, minStock: 10, icon: 'fa-solid fa-shoe-prints' },
-            { id: '7', code: 'PPE-007', name: 'ชุดหมีช่างฝ้ายแท้ (Coverall Suit)', category: 'ชุดป้องกันร่างกาย/อื่นๆ', size: 'Size L', stock: 6, minStock: 12, icon: 'fa-solid fa-user-shield' }
-        ];
+        let ppeProducts = [];
+        let ppeTransactions = [];
 
-        let ppeTransactions = JSON.parse(localStorage.getItem('ppe_transactions')) || [
-            { id: 'T-1001', timestamp: '2026-10-04 08:30', type: 'เบิกจ่าย', productId: '2', productName: 'แว่นตานิรภัยเลนส์ใส (Safety Glasses)', qty: 3, requester: 'นายสมชาย ใจดี', department: 'ฝ่ายผลิต (Production)', reason: 'อุปกรณ์เดิมชำรุด/เสียหาย (Replacement)', note: '-' },
-            { id: 'T-1002', timestamp: '2026-10-04 09:15', type: 'เบิกจ่าย', productId: '5', productName: 'ถุงมือกันบาดระดับ 5 (Cut Resistant Gloves)', qty: 5, requester: 'นายวิชัย มั่นคง', department: 'ฝ่ายซ่อมบำรุง (Maintenance)', reason: 'พนักงานใหม่ / เริ่มปฏิบัติงาน (New Employee)', note: '-' },
-            { id: 'T-1003', timestamp: '2026-10-03 14:20', type: 'รับเข้า', productId: '3', productName: 'ที่ครอบหูลดเสียง (Ear Muff)', qty: 20, requester: 'เจ้าหน้าที่คลัง', department: 'คลังสินค้า (Warehouse)', reason: 'สั่งซื้อเติมสต็อก', note: 'PO-69002' }
-        ];
+        // --- FETCH DATA FROM GOOGLE SHEETS ---
+        async function fetchCloudData() {
+            if(!SCRIPT_URL || SCRIPT_URL.includes("วาง Web App")) {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                showToast('ยังไม่ได้ตั้งค่า URL', 'กรุณานำ Web App URL มาใส่ในตัวแปร SCRIPT_URL ของโค้ด', true);
+                // Fallback to default mock data if URL is missing
+                ppeProducts = [
+                    { id: '1', code: 'PPE-001', name: 'หมวกนิรภัยปีกรอบ (Hard Hat)', category: 'อุปกรณ์ป้องกันศีรษะ', size: 'Free Size', stock: 12, minStock: 15, icon: 'fa-solid fa-hard-hat' },
+                    { id: '2', code: 'PPE-002', name: 'แว่นตานิรภัยเลนส์ใส (Safety Glasses)', category: 'อุปกรณ์ป้องกันดวงตา/ใบหน้า', size: 'Standard', stock: 4, minStock: 10, icon: 'fa-solid fa-glasses' },
+                    { id: '3', code: 'PPE-003', name: 'ที่ครอบหูลดเสียง (Ear Muff)', category: 'อุปกรณ์ป้องกันการได้ยิน', size: 'Free Size', stock: 25, minStock: 8, icon: 'fa-solid fa-headphones' },
+                    { id: '4', code: 'PPE-004', name: 'หน้ากากกันฝุ่น N95 (Dust Mask)', category: 'อุปกรณ์ป้องกันระบบทางเดินหายใจ', size: 'Box (50ชิ้น)', stock: 8, minStock: 20, icon: 'fa-solid fa-head-side-mask' },
+                    { id: '5', code: 'PPE-005', name: 'ถุงมือกันบาดระดับ 5 (Cut Resistant Gloves)', category: 'อุปกรณ์ป้องกันมือ/แขน', size: 'L / XL', stock: 3, minStock: 15, icon: 'fa-solid fa-hand' },
+                    { id: '6', code: 'PPE-006', name: 'รองเท้านิรภัยหัวเหล็ก (Safety Shoes)', category: 'อุปกรณ์ป้องกันเท้า/ขา', size: 'Size 42', stock: 18, minStock: 10, icon: 'fa-solid fa-shoe-prints' },
+                    { id: '7', code: 'PPE-007', name: 'ชุดหมีช่างฝ้ายแท้ (Coverall Suit)', category: 'ชุดป้องกันร่างกาย/อื่นๆ', size: 'Size L', stock: 6, minStock: 12, icon: 'fa-solid fa-user-shield' }
+                ];
+                ppeTransactions = [];
+                renderDashboard();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getData`);
+                const result = await response.json();
+                ppeProducts = result.products || [];
+                ppeTransactions = result.transactions || [];
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                renderDashboard();
+            } catch (error) {
+                console.error("Fetch error:", error);
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                showToast('เชื่อมต่อคลาวด์ไม่สำเร็จ', 'กำลังใช้งานข้อมูลสำรองในเครื่อง', true);
+                renderDashboard();
+            }
+        }
+
+        // --- SYNC DATA TO GOOGLE SHEETS ---
+        async function syncToCloud() {
+            if(!SCRIPT_URL || SCRIPT_URL.includes("วาง Web App")) return;
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: "saveAll",
+                        products: ppeProducts,
+                        transactions: ppeTransactions
+                    })
+                });
+            } catch (error) {
+                console.error("Sync error:", error);
+            }
+        }
 
         function saveData() {
-            localStorage.setItem('ppe_products', JSON.stringify(ppeProducts));
-            localStorage.setItem('ppe_transactions', JSON.stringify(ppeTransactions));
-            localStorage.setItem('ppe_categories', JSON.stringify(ppeCategories));
-            localStorage.setItem('ppe_departments', JSON.stringify(ppeDepartments));
             localStorage.setItem('ppe_admin_password', adminPassword);
             localStorage.setItem('ppe_is_admin', isAdmin);
+            localStorage.setItem('ppe_categories', JSON.stringify(ppeCategories));
+            localStorage.setItem('ppe_departments', JSON.stringify(ppeDepartments));
+            syncToCloud();
         }
 
         // --- AUTH & UI STATE UPDATES ---
@@ -870,7 +919,7 @@
         // --- DASHBOARD ---
         function renderDashboard() {
             const totalItems = ppeProducts.length;
-            const lowStockItems = ppeProducts.filter(p => p.stock <= p.minStock);
+            const lowStockItems = ppeProducts.filter(p => Number(p.stock) <= Number(p.minStock));
             
             const todayStr = new Date().toISOString().slice(0, 10);
             const currentMonthStr = todayStr.slice(0, 7);
@@ -878,8 +927,8 @@
             let todayQty = 0, todayCount = 0, monthQty = 0;
             ppeTransactions.forEach(tx => {
                 if(tx.type === 'เบิกจ่าย') {
-                    if(tx.timestamp.startsWith(todayStr)) { todayQty += parseInt(tx.qty); todayCount += 1; }
-                    if(tx.timestamp.startsWith(currentMonthStr)) { monthQty += parseInt(tx.qty); }
+                    if(tx.timestamp && tx.timestamp.startsWith(todayStr)) { todayQty += parseInt(tx.qty); todayCount += 1; }
+                    if(tx.timestamp && tx.timestamp.startsWith(currentMonthStr)) { monthQty += parseInt(tx.qty); }
                 }
             });
 
@@ -900,7 +949,7 @@
                 lowStockContainer.innerHTML = lowStockItems.map(item => `
                     <div class="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-xl">
                         <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold"><i class="${item.icon}"></i></div>
+                            <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold"><i class="${item.icon || 'fa-solid fa-shield-halved'}"></i></div>
                             <div>
                                 <h4 class="text-sm font-bold text-slate-800">${item.name}</h4>
                                 <p class="text-xs text-red-600">คงเหลือ: <b>${item.stock}</b> (ขั้นต่ำ: ${item.minStock})</p>
@@ -940,10 +989,10 @@
             }
 
             tbody.innerHTML = filtered.map(item => {
-                const isLow = item.stock <= item.minStock;
+                const isLow = Number(item.stock) <= Number(item.minStock);
                 return `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shadow-sm"><i class="${item.icon}"></i></div></td>
+                        <td class="p-4"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shadow-sm"><i class="${item.icon || 'fa-solid fa-shield-halved'}"></i></div></td>
                         <td class="p-4"><span class="font-bold text-slate-800">${item.name}</span><p class="text-xs text-slate-400 font-mono">${item.code}</p></td>
                         <td class="p-4 text-xs text-slate-600">${item.category}</td>
                         <td class="p-4 text-xs text-slate-600">${item.size || '-'}</td>
@@ -995,12 +1044,12 @@
             const product = ppeProducts.find(p => p.id === productId);
             if(!product) { showToast('เกิดข้อผิดพลาด', 'ไม่พบอุปกรณ์ที่เลือก', true); return; }
 
-            if(product.stock < qty) {
+            if(Number(product.stock) < qty) {
                 showToast('เบิกไม่สำเร็จ', `สินค้าในคลังไม่พอ (${product.name} เหลือเพียง ${product.stock} ชิ้น)`, true);
                 return;
             }
 
-            product.stock -= qty;
+            product.stock = Number(product.stock) - qty;
             const now = new Date();
             const timestamp = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
             const txId = 'TX-' + Math.floor(1000 + Math.random() * 9000);
@@ -1050,7 +1099,7 @@
             const product = ppeProducts.find(p => p.id === productId);
             if(!product) return;
 
-            product.stock += qty;
+            product.stock = Number(product.stock) + qty;
             const now = new Date();
             const timestamp = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5);
             const txId = 'RX-' + Math.floor(1000 + Math.random() * 9000);
@@ -1087,7 +1136,7 @@
             const filtered = ppeTransactions.filter(tx => {
                 const matchType = !typeFilter || tx.type === typeFilter;
                 const matchDept = !deptFilter || tx.department === deptFilter;
-                const matchSearch = !searchKeyword || tx.productName.toLowerCase().includes(searchKeyword) || tx.requester.toLowerCase().includes(searchKeyword) || tx.id.toLowerCase().includes(searchKeyword);
+                const matchSearch = !searchKeyword || (tx.productName && tx.productName.toLowerCase().includes(searchKeyword)) || (tx.requester && tx.requester.toLowerCase().includes(searchKeyword)) || (tx.id && tx.id.toLowerCase().includes(searchKeyword));
                 return matchType && matchDept && matchSearch;
             });
 
@@ -1135,7 +1184,7 @@
         }
 
         function renderReports() {
-            const lowStockItems = ppeProducts.filter(p => p.stock <= p.minStock);
+            const lowStockItems = ppeProducts.filter(p => Number(p.stock) <= Number(p.minStock));
             const container = document.getElementById('reportsLowStockContainer');
 
             if(lowStockItems.length === 0) {
@@ -1163,7 +1212,7 @@
             const categoryMap = {};
             ppeCategories.forEach(c => { categoryMap[c] = 0; });
             ppeTransactions.forEach(tx => {
-                if(tx.type === 'เบิกจ่าย' && tx.timestamp.startsWith(currentMonthStr)) {
+                if(tx.type === 'เบิกจ่าย' && tx.timestamp && tx.timestamp.startsWith(currentMonthStr)) {
                     const prod = ppeProducts.find(p => p.id === tx.productId);
                     if(prod) { categoryMap[prod.category] = (categoryMap[prod.category] || 0) + parseInt(tx.qty); }
                 }
@@ -1187,7 +1236,7 @@
             }
             tbody.innerHTML = ppeProducts.map(item => `
                 <tr class="hover:bg-slate-50">
-                    <td class="p-4"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shadow-sm"><i class="${item.icon}"></i></div></td>
+                    <td class="p-4"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg shadow-sm"><i class="${item.icon || 'fa-solid fa-shield-halved'}"></i></div></td>
                     <td class="p-4"><span class="font-bold text-slate-800">${item.name}</span><p class="text-xs text-slate-400 font-mono">${item.code}</p></td>
                     <td class="p-4 text-xs text-slate-600">${item.category}</td>
                     <td class="p-4 text-xs text-slate-600">${item.size || '-'}</td>
@@ -1274,7 +1323,7 @@
             }
         }
 
-        // --- ADMIN: SETTINGS (Categories, Departments, Password) ---
+        // --- ADMIN: SETTINGS ---
         function renderAdminSettings() {
             const catContainer = document.getElementById('categoryListContainer');
             catContainer.innerHTML = ppeCategories.map((cat, idx) => `
@@ -1334,7 +1383,6 @@
         }
 
         function changeAdminPassword(event) {
-            projectPass = document.getElementById('newAdminPass').value.trim();
             event.preventDefault();
             const newPass = document.getElementById('newAdminPass').value.trim();
             if(!newPass) return;
@@ -1347,9 +1395,8 @@
         // --- INITIAL LOAD ---
         window.onload = function() {
             updateAdminUI();
-            renderDashboard();
+            fetchCloudData();
         };
-       
     </script>
 </body>
 </html>
